@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import pandas as pd
 import plotly.graph_objects as go
 import json
@@ -27,7 +27,15 @@ st.markdown("""
 
 # 2. 사이드바 - API 설정 및 데이터 입력
 st.sidebar.title("🔒 Analyst Authentication & Input")
-api_key = st.sidebar.text_input("Gemini API Key", type="password")
+
+# URL 파라미터 또는 스트림릿 시크릿에서 키 가져오기 시도
+query_params = st.query_params
+if "key" in query_params and query_params["key"] == "secrets" and "GEMINI_KEY" in st.secrets:
+    initial_key = st.secrets["GEMINI_KEY"]
+else:
+    initial_key = ""
+
+api_key = st.sidebar.text_input("Gemini API Key", value=initial_key, type="password")
 ticker_input = st.sidebar.text_input("Target Ticker / Company Name", placeholder="e.g., AAPL, 005930")
 uploaded_file = st.sidebar.file_uploader("Upload Financial Statements (Optional)", type=["pdf", "xlsx"])
 
@@ -40,9 +48,8 @@ if not api_key:
     st.info("💡 시스템을 가동하려면 사이드바에 Gemini API Key를 입력하십시오.")
     st.stop()
 
-# Gemini 모델 설정
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-3.5-flash')
+# 최신 google-genai 클라이언트 가동
+client = genai.Client(api_key=api_key)
 
 # PDF 텍스트 추출 함수
 def extract_pdf_text(file):
@@ -64,7 +71,7 @@ if st.sidebar.button("RUN COMPREHENSIVE ANALYSIS"):
         file_context = ""
         if uploaded_file is not None:
             if uploaded_file.name.endswith('.pdf'):
-                file_context = extract_pdf_text(uploaded_file)[:30000] # 모델 컨텍스트 제한 고려
+                file_context = extract_pdf_text(uploaded_file)[:30000]
             elif uploaded_file.name.endswith('.xlsx'):
                 df_sheets = pd.read_excel(uploaded_file, sheet_name=None)
                 file_context = "\n".join([f"Sheet: {k}\n{v.to_string()[:5000]}" for k, v in df_sheets.items()])
@@ -102,8 +109,13 @@ if st.sidebar.button("RUN COMPREHENSIVE ANALYSIS"):
         """
 
         try:
-            response = model.generate_content(prompt)
-            # JSON 파싱 공백 제거 및 보정
+            # 구글 공식 최신 모델(gemini-3.5-flash) 호출 문법 적용
+            response = client.models.generate_content(
+                model='gemini-3.5-flash',
+                contents=prompt,
+            )
+            
+            # JSON 파싱 및 공백 보정
             response_text = response.text.strip()
             if response_text.startswith("```json"):
                 response_text = response_text.split("```json")[1].split("```")[0].strip()
@@ -133,7 +145,6 @@ if st.sidebar.button("RUN COMPREHENSIVE ANALYSIS"):
                 st.table(score_df.style.background_gradient(cmap="Blues", subset=["Score"]))
                 
             with col2:
-                # Plotly를 활용한 가독성 높은 시각화 컴포넌트 배치
                 categories = ['Macro', 'Financial', 'Valuation', 'Risk', 'Alternative']
                 scores = [result['scorecard']['macro'], result['scorecard']['financial'], result['scorecard']['valuation'], result['scorecard']['risk'], result['scorecard']['alternative']]
                 
@@ -148,22 +159,22 @@ if st.sidebar.button("RUN COMPREHENSIVE ANALYSIS"):
             st.markdown(f"> **Core Rationale:** {result['rationale']}")
             st.markdown("---")
 
-            # 3. 8단계 상세 분석 결과 아코디언 매핑 (Canvas 스타일의 전용 인터페이스 구현)
-            with st.expander("Step 3: Macro & Industry Cycle Analysis", expanded=True):
-                st.markdown(result['macro_analysis'])
+            # 3. 아코디언 매핑
+            with St.expander("Step 3: Macro & Industry Cycle Analysis", expanded=True):
+                St.markdown(result['macro_analysis'])
                 
-            with st.expander("Step 4: Advanced Financial Statement Analysis", expanded=True):
-                st.markdown(result['financial_analysis'])
+            with St.expander("Step 4: Advanced Financial Statement Analysis", expanded=True):
+                St.markdown(result['financial_analysis'])
                 
-            with st.expander("Step 5: Multi-dimensional Valuation & Algorithmic Pricing", expanded=True):
-                st.markdown(result['valuation'])
+            with St.expander("Step 5: Multi-dimensional Valuation & Algorithmic Pricing", expanded=True):
+                St.markdown(result['valuation'])
                 
-            with st.expander("Step 6: Leverage & ESG Risk Matrix", expanded=True):
-                st.markdown(result['risk_analysis'])
+            with St.expander("Step 6: Leverage & ESG Risk Matrix", expanded=True):
+                St.markdown(result['risk_analysis'])
                 
-            with st.expander("Step 7: Alternative Data Sentiment Mining", expanded=False):
-                st.markdown(result['alternative_data'])
+            with St.expander("Step 7: Alternative Data Sentiment Mining", expanded=False):
+                St.markdown(result['alternative_data'])
 
         except Exception as e:
-            st.error(f"분석 파이프라인 연산 중 오류가 발생했습니다: {str(e)}")
-            st.info("API 반환 데이터 형식이 유효하지 않거나 한도 초과일 수 있습니다. 입력을 확인 후 재시도하십시오.")
+            St.error(f"분석 파이프라인 연산 중 오류가 발생했습니다: {str(e)}")
+            St.info("API 반환 데이터 형식이 유효하지 않거나 한도 초과일 수 있습니다. 입력을 확인 후 재시도하십시오.")
