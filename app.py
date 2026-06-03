@@ -159,22 +159,22 @@ if st.sidebar.button("RUN COMPREHENSIVE ANALYSIS"):
             st.markdown(f"> **Core Rationale:** {result['rationale']}")
             st.markdown("---")
 
-            # 3. 아코디언 매핑
-            with St.expander("Step 3: Macro & Industry Cycle Analysis", expanded=True):
-                St.markdown(result['macro_analysis'])
+            # 3. 아코디언 매핑 (St -> st 교정 완료)
+            with st.expander("Step 3: Macro & Industry Cycle Analysis", expanded=True):
+                st.markdown(result['macro_analysis'])
                 
-            with St.expander("Step 4: Advanced Financial Statement Analysis", expanded=True):
-                St.markdown(result['financial_analysis'])
+            with st.expander("Step 4: Advanced Financial Statement Analysis", expanded=True):
+                st.markdown(result['financial_analysis'])
                 
-            with St.expander("Step 5: Multi-dimensional Valuation & Algorithmic Pricing", expanded=True):
-                St.markdown(result['valuation'])
+            with st.expander("Step 5: Multi-dimensional Valuation & Algorithmic Pricing", expanded=True):
+                st.markdown(result['valuation'])
                 
-            with St.expander("Step 6: Leverage & ESG Risk Matrix", expanded=True):
-                St.markdown(result['risk_analysis'])
+            with st.expander("Step 6: Leverage & ESG Risk Matrix", expanded=True):
+                st.markdown(result['risk_analysis'])
                 
-            with St.expander("Step 7: Alternative Data Sentiment Mining", expanded=False):
-                St.markdown(result['alternative_data'])
+            with st.expander("Step 7: Alternative Data Sentiment Mining", expanded=False):
+                st.markdown(result['alternative_data'])
 
         except Exception as e:
-            St.error(f"분석 파이프라인 연산 중 오류가 발생했습니다: {str(e)}")
-            St.info("API 반환 데이터 형식이 유효하지 않거나 한도 초과일 수 있습니다. 입력을 확인 후 재시도하십시오.")
+            st.error(f"분석 파이프라인 연산 중 오류가 발생했습니다: {str(e)}")
+            st.info("API 반환 데이터 형식이 유효하지 않거나 한도 초과일 수 있습니다. 입력을 확인 후 재시도하십시오.")
